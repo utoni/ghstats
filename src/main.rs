@@ -22,21 +22,6 @@ mod utils;
 
 const DEFAULT_METRICS_CRON: &str = "0 59 * * * *";
 
-async fn check_new_release(state: Arc<AppState>) -> Res {
-  let tag = state.gh.get_latest_release_ver("vladkens/ghstats").await?;
-  let mut last_tag = state.last_release.lock().unwrap();
-  if *last_tag != tag {
-    // a dev build is ahead of its own release tag, so only a newer release is worth a log
-    if utils::is_newer_release(&tag, env!("CARGO_PKG_VERSION")) {
-      tracing::info!("new release available: {} -> {}", *last_tag, tag);
-    }
-
-    *last_tag = tag.clone();
-  }
-
-  Ok(())
-}
-
 fn metrics_cron_schedule() -> String {
   std::env::var("GHS_CRON_SCHEDULE").unwrap_or_else(|_| DEFAULT_METRICS_CRON.to_string())
 }
@@ -45,10 +30,6 @@ fn new_metrics_job(state: Arc<AppState>, cron_schedule: &str) -> Res<tokio_cron_
   let job = tokio_cron_scheduler::Job::new_async(cron_schedule, move |_, _| {
     let state = state.clone();
     Box::pin(async move {
-      if state.version_check {
-        let _ = check_new_release(state.clone()).await;
-      }
-
       if let Err(e) = helpers::update_metrics(state.clone()).await {
         tracing::error!("failed to update metrics: {:?}", e);
       }

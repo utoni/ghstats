@@ -19,7 +19,6 @@ use crate::routes::assets::vendor_url;
 use crate::routes::card::public_repos;
 use crate::state::SyncStatus;
 use crate::types::{AppError, HtmlRes, Res};
-use crate::utils::is_newer_release;
 
 // MARK: Helpers
 
@@ -192,13 +191,6 @@ pub async fn sync_status(State(state): State<Arc<AppState>>) -> Markup {
   sync_label(&state.sync_status(), Utc::now())
 }
 
-fn version_url(version: &str) -> String {
-  match version.rsplit_once("-g") {
-    Some((_, hash)) => format!("https://github.com/vladkens/ghstats/commit/{hash}"),
-    None => "https://github.com/vladkens/ghstats".to_string(),
-  }
-}
-
 fn base(state: &Arc<AppState>, navs: Vec<(String, Option<String>)>, inner: Markup) -> Markup {
   let crumbs = html!(
     nav class="crumbs" aria-label="Breadcrumb" {
@@ -219,10 +211,7 @@ fn base(state: &Arc<AppState>, navs: Vec<(String, Option<String>)>, inner: Marku
 
 /// The page around `inner`, with `left` on the left side of the header
 fn layout(state: &Arc<AppState>, title: Option<&str>, left: Markup, inner: Markup) -> Markup {
-  let (app_name, app_version) = (env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
-
-  let last_release = state.last_release.lock().unwrap().clone();
-  let is_new_release = is_newer_release(&last_release, app_version);
+  let app_name = env!("CARGO_PKG_NAME");
 
   let title = match title {
     Some(title) => &format!("{title} · {app_name}"),
@@ -263,16 +252,7 @@ fn layout(state: &Arc<AppState>, title: Option<&str>, left: Markup, inner: Marku
                 a href=(url) target="_blank" rel="noopener" { (name) }
               }
 
-              @if is_new_release {
-                a href=(format!("https://github.com/vladkens/ghstats/releases/tag/v{last_release}"))
-                  target="_blank" title="New release available!" { "🚨" }
-              }
-
               (sync_label(&state.sync_status(), Utc::now()))
-
-              a class="ver" href=(version_url(app_version)) target="_blank" {
-                (format!("{} v{}", app_name, app_version))
-              }
             }
           }
 
@@ -1896,15 +1876,6 @@ mod tests {
         repo_page(State(state.clone()), path, uri, headers).await
       }
     }
-  }
-
-  #[test]
-  fn version_link() {
-    assert_eq!(version_url("0.11.0"), "https://github.com/vladkens/ghstats");
-    assert_eq!(
-      version_url("0.11.0-3-gabc1234"),
-      "https://github.com/vladkens/ghstats/commit/abc1234"
-    );
   }
 
   #[tokio::test]

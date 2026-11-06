@@ -179,7 +179,6 @@ pub struct AppState {
   pub include_private: bool,
   pub version_check: bool,
   pub default_sort: RepoSort,
-  pub last_release: Mutex<String>,
   db_health: Mutex<DbHealth>,
   sync_status: Mutex<SyncStatus>,
 }
@@ -217,7 +216,6 @@ impl AppState {
     let version_check = !env_bool("GHS_DISABLE_VERSION_CHECK");
     let default_sort = read_sort(&std::env::var("GHS_SORT").unwrap_or_default());
 
-    let last_release = Mutex::new(env!("CARGO_PKG_VERSION").to_string());
     let db_health = Mutex::new(DbHealth::new(Ok(())));
     let sync_status = Mutex::new(SyncStatus::default());
     Ok(Self {
@@ -228,7 +226,6 @@ impl AppState {
       include_private,
       version_check,
       default_sort,
-      last_release,
       db_health,
       sync_status,
     })
@@ -352,7 +349,6 @@ impl AppState {
       include_private: false,
       version_check: false,
       default_sort: RepoSort::default(),
-      last_release: Mutex::new(env!("CARGO_PKG_VERSION").to_string()),
       db_health: Mutex::new(DbHealth::new(Ok(()))),
       sync_status: Mutex::new(SyncStatus::default()),
     }

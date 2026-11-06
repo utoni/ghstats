@@ -16,7 +16,7 @@ const VENDOR: &[(&str, &str, &[u8])] = &[
 ];
 
 pub fn vendor_url(file: &str) -> String {
-  format!("/assets/vendor/{}?v={}", file, env!("CARGO_PKG_VERSION"))
+  format!("/assets/vendor/{}", file)
 }
 
 pub async fn vendor_file(Path(file): Path<String>) -> Response {

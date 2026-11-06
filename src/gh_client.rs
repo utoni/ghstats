@@ -181,7 +181,7 @@ impl GhClient {
   }
 
   fn with_token(token: TokenSource, base_url: String) -> Res<Self> {
-    let user_agent = format!("{}/{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+    let user_agent = format!("{}/{}", "unknown", "0.0.1");
 
     let mut headers = HeaderMap::new();
     headers.insert("Accept", HeaderValue::from_static("application/vnd.github+json"));
